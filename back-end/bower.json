@@ -1,0 +1,20 @@
+{
+  "name": "bearing",
+  "description": "This is a simple app",
+  "main": "server.js",
+  "authors": [
+    "pnthang"
+  ],
+  "license": "ISC",
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bootstrap": "^3.3.7"
+  }
+}

@@ -1,0 +1,25 @@
+{
+	"name": "bearing",
+	"version": "1.0.0",
+	"description": "bearing project",
+	"main": "server.js",
+	"scripts": {
+		"start": "nodemon server.js or npm start",
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"author": "pnthang",
+	"license": "ISC",
+	"dependencies": {
+		"body-parser": "^1.18.2",
+		"bower": "^1.8.2",
+		"cors": "^2.8.4",
+		"express": "^4.16.2",
+		"express-handlebars": "^3.0.0",
+		"lodash": "^4.17.4",
+		"nodemon": "^1.13.3",
+		"pg": "^6.4.2",
+		"pg-hstore": "^2.3.2",
+		"pug": "^2.0.0-rc.4",
+		"sequelize": "^4.28.6"
+	}
+}
