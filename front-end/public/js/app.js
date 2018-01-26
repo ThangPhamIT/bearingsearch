@@ -1,12 +1,12 @@
-const path = require('path');
+import "babel-polyfill";
+import "isomorphic-fetch";
+
 import React from 'react';
 import ReactDOM from 'react-dom';
-
-import './global';
 
 import App from '../jsx/app.jsx';
 
 
 ReactDOM.render(
-	<div> <App /> </div>,document.getElementById('app')
+	<div> <App /> </div>, document.getElementById('app')
 );

@@ -1,24 +1,18 @@
 const path = require('path');
 const BUILD_DIR = path.join(__dirname, 'public/js');
-// output: {
-//   path: BUILD_DIR,
-//   filename: "bundle.js",
-//   publicPath: './'
-// },
+
 let config = {
-	entry: {
-		main: [
-			"./public/js/app.js"
-		]
-	},
+	entry: [
+		"./public/js/app.js"
+	],
 	output: {
-		path: __dirname,
+		path: BUILD_DIR,
 		filename: "bundle.js"
 	},
 
 	devServer: {
 		inline: true,
-		port: 8080
+		port: 80
 	},
 
 	module: {

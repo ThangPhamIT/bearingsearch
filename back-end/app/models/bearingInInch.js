@@ -42,7 +42,7 @@ var bearingInInch = database.define('bearingininch', {
         allowNull: true
     },
     part_number: {
-        type: sequelize.INTEGER,
+        type: sequelize.STRING,
         allowNull: false
     },
     brands: {

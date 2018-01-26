@@ -4,8 +4,11 @@ import DimensionSearch from './dimensionSearch.jsx';
 import SearchResult from './searchResult.jsx';
 import BearingType from './bearingType.jsx';
 
-import $ from '../js/jquery.min';
-import global from '../js/global.js';
+import { URL, API_bearingDimensions, API_bearingTypes, API_bearings } from '../../constant/constant';
+
+var url_dimension = URL + API_bearingDimensions;
+var url_result = URL + API_bearings;
+var url_bearingTypes = URL + API_bearingTypes;
 
 class app extends React.Component {
 
@@ -14,26 +17,31 @@ class app extends React.Component {
 		this.state = {
 			bearingTypes: [],
 			dimension: [],
+			beforeFilteredDimensions: [],
 			isLoading: false,
 			selectedUnit: 1,
 			type_id: "",
-			selectedOuter: "",
-			selectedInner: "",
-			selectedThick: "",
+			selectedOutside: "-1",
+			selectedInside: "-1",
+			selectedThick: "-1",
 			selectedType: "",
 			result: [],
-			API_URL : 'http://localhost:8082/bearingDimensions/'
+			isHandleSearch: false,
+			intervalId: 0
 		};
 		this.getDimension = this.getDimension.bind(this);
 		this.getUnit = this.getUnit.bind(this);
 		this.getDimensionSearch = this.getDimensionSearch.bind(this);
-		this.getOuterDiameter = this.getOuterDiameter.bind(this);
-		this.getInnerDiameter = this.getInnerDiameter.bind(this);
+		this.getOutsideDiameter = this.getOutsideDiameter.bind(this);
+		this.getInsideDiameter = this.getInsideDiameter.bind(this);
 		this.getThickness = this.getThickness.bind(this);
+		this.scrollToTop = this.scrollToTop.bind(this);
+		this.filterDimension = this.filterDimension.bind(this);
 	}
 
 	fetch_bearingTypes() {
-		fetch('http://localhost:8082/bearingTypes', {
+
+		fetch(url_bearingTypes, {
 			method: 'get',
 			'Content-Type': 'application/json'
 		}).then((response) => response.json())
@@ -49,14 +57,14 @@ class app extends React.Component {
 
 	// call api get dimension bearing
 	fetch_bearing(typeId, unit) {
-		console.log('fetch_bearing'+unit);
-		fetch(this.state.API_URL + typeId + '/unit/' + unit, {
+		fetch(url_dimension + typeId + '/unit/' + unit, {
 			method: 'get',
 			'Content-Type': 'application/json'
 		}).then((response) => response.json())
 			.then((responseData) => {
 				this.setState({
-					dimension: responseData,
+					beforeFilteredDimensions: responseData,
+					dimension: responseData
 				});
 			}).catch(function () {
 				console.log(Error);
@@ -64,28 +72,29 @@ class app extends React.Component {
 	}
 
 	// call api get result bearing
-	fetch_result(typeId, unit, outer, inner = undefined, thick) {
-		var str_inner = "";
-		var str_outer = "";
+	fetch_result(typeId, unit, outside, inside, thick) {
+		var str_inside = "";
+		var str_outside = "";
 		var str_thick = "";
 
-		if(inner != '' && inner != '-1' && inner != undefined) {
-			str_inner = "&d=" + inner;
+		if (inside != '' && inside != '-1' && inside != undefined) {
+			str_inside = "&d=" + inside;
 		}
-		if(outer != '' && outer != '-1' && outer != undefined) {
-			str_outer = "&D=" + outer;
+		if (outside != '' && outside != '-1' && outside != undefined) {
+			str_outside = "&D=" + outside;
 		}
-		if(thick != '' && thick != '-1' && thick != undefined) {
+		if (thick != '' && thick != '-1' && thick != undefined) {
 			str_thick = "&B=" + thick;
 		}
-		console.log('http://localhost:8082/bearings?bearing_type='+ typeId +'&unit='+ unit +str_inner+str_outer + str_thick);
-		fetch('http://localhost:8082/bearings?bearing_type='+ typeId +'&unit='+ unit +str_inner+str_outer + str_thick, {
+		console.log('search - ' + url_result + '?bearing_type=' + typeId + '&unit=' + unit + str_inside + str_outside + str_thick);
+		fetch(url_result + '?bearing_type=' + typeId + '&unit=' + unit + str_inside + str_outside + str_thick, {
 			method: 'get',
 			'Content-Type': 'application/json'
 		}).then((response) => response.json())
 			.then((responseData) => {
 				this.setState({
 					result: responseData,
+					isHandleSearch: true
 				});
 			}).catch(function () {
 				console.log(Error);
@@ -98,68 +107,100 @@ class app extends React.Component {
 	}
 
 	getDimension(dimensionVal, selectVal) {
-	    // do not forget to bind getData in constructor
+		// do not forget to bind getData in constructor
 		this.setState({
-				dimension: dimensionVal,
-				selectedType: selectVal,
-				selectedOuter: "",
-				selectedInner: "",
-				selectedThick: ""
+			dimension: dimensionVal,
+			beforeFilteredDimensions: dimensionVal,
+			selectedType: selectVal,
+			selectedOutside: "-1",
+			selectedInside: "-1",
+			selectedThick: "-1"
 		});
-		console.log('dimensionVal ' + selectVal + "--> " + JSON.stringify(dimensionVal));
-		this.changeTextSelect();
-	}
-
-	changeTextSelect() {
-		$('#outer-diameter').removeClass('outer-diameter');
-		$('#outer-diameter').addClass('outer-diameter-before');
-		$('#inner-diameter').removeClass('inner-diameter');
-		$('#inner-diameter').addClass('inner-diameter-before');
-		$('#thickness').removeClass('thickness');
-		$('#thickness').addClass('thickness-before');
 	}
 
 	getUnit(val) {
 		this.setState({
-				selectedUnit: val,
-				selectedOuter: "",
-				selectedInner: "",
-				selectedThick: ""
+			selectedUnit: val,
+			selectedOutside: "-1",
+			selectedInside: "-1",
+			selectedThick: "-1"
 		});
 		this.fetch_bearing(this.state.selectedType, val);
-		this.changeTextSelect();
 	}
 
-	getDimensionSearch(outer, inner, thick) {
-		this.fetch_result(this.state.selectedType, this.state.selectedUnit, this.state.selectedOuter, this.state.selectedInner, this.state.selectedThick);
+	getDimensionSearch() {
+		this.fetch_result(this.state.selectedType, this.state.selectedUnit, this.state.selectedOutside, this.state.selectedInside, this.state.selectedThick);
 	}
 
-	//get Outer diameter from compnent dimensionSearch
-	getOuterDiameter (val) {
-		this.setState({
-			selectedOuter: val
+	//filter dimension
+	filterDimension(valueInside, valueOutside, valueThick) {
+		var me = this;
+		var filteredDimensions = [];
+		//me.state.beforeFilteredDimensions
+		me.state.beforeFilteredDimensions.map((value, key) => {
+			if ((valueOutside === "-1" || value.D === valueOutside) 
+			&& (valueInside === "-1" || value.d === valueInside)
+			&& (valueThick === "-1" || value.B === valueThick)) {
+				filteredDimensions.push(value);
+			}
+		});
+		me.setState({
+			dimension: filteredDimensions
 		});
 	}
 
-	//get Inner diameter from compnent dimensionSearch
-	getInnerDiameter (val) {
+	//get Outside diameter from compnent dimensionSearch
+	getOutsideDiameter(valueOutside) {
+		console.log('getOutsideDiameter--' + valueOutside);
+		this.filterDimension(this.state.selectedInside, valueOutside, this.state.selectedThick);
 		this.setState({
-			selectedInner: val
+			selectedOutside: valueOutside
+		});
+	}
+
+	//get Inside diameter from compnent dimensionSearch
+	getInsideDiameter(valueInside) {
+		this.filterDimension(valueInside, this.state.selectedOutside, this.state.selectedThick);(valueInside);
+		this.setState({
+			selectedInside: valueInside
 		});
 	}
 
 	//get Thickness from compnent dimensionSearch
-	getThickness (val) {
+	getThickness(valueThick) {
+		this.filterDimension(this.state.selectedInside, this.state.selectedOutside, valueThick);
 		this.setState({
-			selectedThick: val
+			selectedThick: valueThick
 		});
 	}
 
+	scrollToTop() {
+		$('body,html').animate({
+			scrollTop: 0
+		}, 800);
+	}
+
+	componentDidUpdate() {
+		if ($('body').height() > window.innerHeight) {
+			$("#scroll_top").show();
+		} else {
+			$("#scroll_top").hide();
+		}
+	}
+	// componentDidCatch(error, info) {
+  
+	// 	/* Example stack information:
+	// 	   in ComponentThatThrows (created by App)
+	// 	   in ErrorBoundary (created by App)
+	// 	   in div (created by App)
+	// 	   in App
+	// 	*/
+	// 	console.log(error, "-", info.componentStack);
+		
+	// }
+	
 	render() {
-		console.log('outer-'+this.state.selectedOuter);
-		console.log('inner-'+this.state.selectedInner);
-		console.log('thick-'+this.state.selectedThick);
-		console.log('data'+JSON.stringify(this.state.result));
+		console.log('state-inside-',this.state.selectedInside);
 		return (
 			<div>
 				<div className="logo">
@@ -168,29 +209,30 @@ class app extends React.Component {
 						<span className="main-title">Bearing Search</span>
 					</div>
 				</div>
-				<div className="search-content row">
+				<div className="search-content">
 					<div className="container">
 						<div className="row">
 							<div className="col-md-8 col-sm-8">
 								<span className="title-search">Bearing Type</span>
 								<BearingType
-									bearingTypes = {this.state.bearingTypes}
-									sendDimension = {this.getDimension}
-									unit = {this.state.selectedUnit}
+									url_dimension={url_dimension}
+									bearingTypes={this.state.bearingTypes}
+									sendDimension={this.getDimension}
+									unit={this.state.selectedUnit}
 								/>
 							</div>
 							<div className="col-md-4 col-sm-4">
 								<DimensionSearch
-									bearingTypes = {this.state.bearingTypes}
-									dimension = {this.state.dimension}
-									sendUnit = {this.getUnit}
-									sendDimensionSearch = {this.getDimensionSearch}
-									sendOuterDiameter = {this.getOuterDiameter}
-									sendInnerDiameter = {this.getInnerDiameter}
-									sendThickness = {this.getThickness}
-									selectedOuter = {this.state.selectedOuter}
-									selectedInner = {this.state.selectedInner}
-									selectedThick = {this.state.selectedThick}
+									bearingTypes={this.state.bearingTypes}
+									dimension={this.state.dimension}
+									sendUnit={this.getUnit}
+									sendDimensionSearch={this.getDimensionSearch}
+									sendOutsideDiameter={this.getOutsideDiameter}
+									sendInsideDiameter={this.getInsideDiameter}
+									sendThickness={this.getThickness}
+									selectedOutside={this.state.selectedOutside}
+									selectedInside={this.state.selectedInside}
+									selectedThick={this.state.selectedThick}
 								/>
 							</div>
 						</div>
@@ -199,14 +241,15 @@ class app extends React.Component {
 				<div className="clearfix"></div>
 				<div className="search-result">
 					<div className="container">
-						<span className="title-search">{Object.keys(this.state.result).length > 0 ? (Object.keys(this.state.result).length + " items found") : ""} </span>
+						<span className="title-search">{(Object.keys(this.state.result).length >= 0 && this.state.isHandleSearch
+							!= false) ? (Object.keys(this.state.result).length + " items found") : ""} </span>
 						<SearchResult resultData={this.state.result} />
 					</div>
 				</div>
+				<div title='Back to top' className='scroll' id="scroll_top" onClick={this.scrollToTop}></div>
 			</div>
 		);
 	}
 }
-
 
 module.exports = app;

@@ -42,7 +42,7 @@ var bearingInMilimeter = database.define('bearinginmilimeter', {
         allowNull: true
     },
     part_number: {
-        type: sequelize.INTEGER,
+        type: sequelize.STRING,
         allowNull: false
     },
     brands: {

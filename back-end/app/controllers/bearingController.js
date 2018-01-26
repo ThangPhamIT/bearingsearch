@@ -13,10 +13,6 @@ var bearingController = {
 
     getBearings: function (req, res) {
         bearingService.bearings(req, res);
-    },
-
-    getMeasurementFilters: function (req, res) {
-        bearingService.measurementFilter(req, res);
     }
 };
 

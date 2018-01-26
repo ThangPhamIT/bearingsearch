@@ -43,7 +43,7 @@ var bearing = database.define('bearing', {
         allowNull: true
     },
     part_number: {
-        type: sequelize.INTEGER,
+        type: sequelize.STRING,
         allowNull: false
     },
     brands: {
